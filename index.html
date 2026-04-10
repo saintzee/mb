@@ -67,10 +67,11 @@ button { font: inherit; background: transparent; border: 0; cursor: pointer; }
   inset: 0;
   z-index: 9997;
   pointer-events: none;
+  opacity: 0; /* hidden over the hero; faded in as user scrolls past */
   background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.035) 1px, transparent 1.4px);
   background-size: 26px 26px;
   background-position: 0 0;
-  will-change: background-position;
+  will-change: background-position, opacity;
   /* subtle radial mask so dots fade at the viewport edges */
   -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 45%, #000 55%, transparent 100%);
           mask-image: radial-gradient(ellipse 90% 80% at 50% 45%, #000 55%, transparent 100%);
@@ -1248,9 +1249,22 @@ body::after {
           scrub: true,
         },
       });
+      /* Fade the dot layer in only after the user has scrolled out of the
+         hero, so the hero stays clean. */
+      const fade = gsap.to(".texture-dots", {
+        opacity: 1,
+        ease: "none",
+        scrollTrigger: {
+          start: 0,
+          end: "80vh",
+          scrub: true,
+        },
+      });
       return () => {
         if (tween.scrollTrigger) tween.scrollTrigger.kill();
         tween.kill();
+        if (fade.scrollTrigger) fade.scrollTrigger.kill();
+        fade.kill();
       };
     }, []);
 
