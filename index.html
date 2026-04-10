@@ -1,0 +1,1280 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover" />
+<meta name="color-scheme" content="dark" />
+<title>mb.io — A token built for the real world</title>
+
+<style>
+/* =========================================================
+   FONTS — GT America (4 weights) + Compressed Bold for hero
+   ========================================================= */
+@font-face {
+  font-family: "GT America";
+  src: url("fonts/GT-America-Standard-Light-Trial.otf") format("opentype");
+  font-weight: 300; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "GT America";
+  src: url("fonts/GT-America-Standard-Regular-Trial.otf") format("opentype");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "GT America";
+  src: url("fonts/GT-America-Standard-Medium-Trial.otf") format("opentype");
+  font-weight: 500; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "GT America Compressed";
+  src: url("fonts/GT-America-Compressed-Bold-Trial.otf") format("opentype");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "GT America Mono";
+  src: url("fonts/GT-America-Mono-Regular-Trial.otf") format("opentype");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+
+/* =========================================================
+   BASE RESET
+   ========================================================= */
+html, body {
+  margin: 0; padding: 0;
+  background: #000;
+  color: #fff;
+  font-family: "GT America", -apple-system, BlinkMacSystemFont, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+::selection { background: #FFA900; color: #000; }
+*, *::before, *::after { box-sizing: border-box; }
+img, svg, video { display: block; max-width: 100%; }
+a { text-decoration: none; color: inherit; }
+button { font: inherit; background: transparent; border: 0; cursor: pointer; }
+:focus:not(:focus-visible) { outline: none; }
+:focus-visible { outline: 2px solid #FFA900; outline-offset: 4px; border-radius: 2px; }
+
+/* =========================================================
+   GLOBAL TEXTURE SYSTEM
+   Two stacked layers, both pointer-events:none:
+   1. .texture-dots — fixed dot field, parallaxed on scroll
+   2. body::after   — film-grain noise (paper over-layer)
+   ========================================================= */
+.texture-dots {
+  position: fixed;
+  inset: 0;
+  z-index: 9997;
+  pointer-events: none;
+  background-image: radial-gradient(circle at 1px 1px, rgba(255,255,255,0.035) 1px, transparent 1.4px);
+  background-size: 26px 26px;
+  background-position: 0 0;
+  will-change: background-position;
+  /* subtle radial mask so dots fade at the viewport edges */
+  -webkit-mask-image: radial-gradient(ellipse 90% 80% at 50% 45%, #000 55%, transparent 100%);
+          mask-image: radial-gradient(ellipse 90% 80% at 50% 45%, #000 55%, transparent 100%);
+}
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  width: 100vw;
+  height: 100vh;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='300' height='300'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.80' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='300' height='300' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 180px 180px;
+  background-repeat: repeat;
+  opacity: 0.032;
+  pointer-events: none;
+  z-index: 9998;
+  mix-blend-mode: overlay;
+}
+
+/* =========================================================
+   BUTTONS — pure CSS, zero GSAP dependency
+   ========================================================= */
+.btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  border-radius: 9999px;
+  padding: 13px 26px;
+  font-family: "GT America", sans-serif;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  border: none;
+  text-decoration: none;
+  transition: transform 0.18s cubic-bezier(0.4,0,0.2,1),
+              box-shadow 0.35s ease;
+  -webkit-tap-highlight-color: transparent;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+/* Inner span carries the content above the ::before layer */
+.btn > span {
+  position: relative;
+  z-index: 1;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Primary — orange fill, lighter orange sweeps in from left on hover */
+.btn-primary { background: #FFA900; color: #0A0A0D; }
+.btn-primary::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(130deg, #FFB820 0%, #FFCB45 100%);
+  opacity: 0;
+  transition: opacity 0.42s cubic-bezier(0.4,0,0.2,1);
+}
+.btn-primary:hover::before { opacity: 1; }
+.btn-primary:hover {
+  box-shadow: 0 0 40px rgba(255,169,0,0.35), 0 4px 16px rgba(255,169,0,0.2);
+  transform: translateY(-1px);
+}
+.btn-primary:active { transform: scale(0.972) translateY(0); box-shadow: none; }
+
+/* Ghost — transparent with hairline border */
+.btn-ghost { background: transparent; color: #fff; border: 1px solid rgba(255,255,255,0.14); }
+.btn-ghost::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: rgba(255,255,255,0.06);
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.btn-ghost:hover::before { opacity: 1; }
+.btn-ghost:hover { border-color: rgba(255,255,255,0.28); transform: translateY(-1px); }
+.btn-ghost:active { transform: scale(0.972); }
+
+/* =========================================================
+   ACCENT LINK
+   ========================================================= */
+.accent-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #FFA900;
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  cursor: pointer;
+  transition: color 0.25s, gap 0.3s cubic-bezier(0.4,0,0.2,1);
+}
+.accent-link:hover { color: #FFB820; gap: 10px; }
+.accent-link .al-text {
+  position: relative;
+  display: inline-block;
+}
+.accent-link .al-text::after {
+  content: '';
+  position: absolute;
+  left: 0; bottom: -1px;
+  width: 0; height: 1px;
+  background: currentColor;
+  transition: width 0.4s cubic-bezier(0.4,0,0.2,1);
+}
+.accent-link:hover .al-text::after { width: 100%; }
+
+/* =========================================================
+   HERO — compressed display headline
+   ========================================================= */
+.hero-compressed {
+  font-family: "GT America Compressed", "GT America", sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  line-height: 0.87;
+  text-transform: uppercase;
+}
+
+/* =========================================================
+   MISC
+   ========================================================= */
+#root:empty::before { content: ""; position: fixed; inset: 0; background: #000; }
+
+.diagram-img {
+  width: 100%;
+  max-width: 1000px;
+  margin: 0 auto;
+  display: block;
+  /* invert white elements in diagram to work on dark bg if needed */
+}
+</style>
+
+<!-- Tailwind Play CDN -->
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+  tailwind.config = {
+    theme: {
+      extend: {
+        fontFamily: {
+          sans:       ['"GT America"', '-apple-system', 'BlinkMacSystemFont', '"Helvetica Neue"', 'Arial', 'sans-serif'],
+          mono:       ['"GT America Mono"', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'monospace'],
+          compressed: ['"GT America Compressed"', '"GT America"', 'sans-serif'],
+        },
+        colors: {
+          brand: {
+            orange:       '#FFA900',
+            'orange-hi':  '#FFB820',
+            'orange-tint':'rgba(255,169,0,0.08)',
+          },
+          ink:  { 0: '#000000', 1: '#0A0A0D', 2: '#111115', 3: '#16161A' },
+          gain: '#30D158',
+        },
+        maxWidth: { container: '1240px' },
+        letterSpacing: {
+          'extra-tight': '-0.04em',
+          'super-tight': '-0.045em',
+        },
+      }
+    }
+  }
+</script>
+
+<!-- React 18 UMD — reliable file:// loading, no bundler -->
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+
+<!-- GSAP 3.12.5 + ScrollTrigger UMD -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+</head>
+
+<body class="bg-black text-white font-sans antialiased">
+<div id="root"></div>
+
+<script src="https://unpkg.com/@babel/standalone@7.24.7/babel.min.js"></script>
+<script type="text/babel" data-presets="react">
+  /* =========================================================
+     GLOBALS — React 18, ReactDOM, GSAP, ScrollTrigger
+     all loaded as UMD <script> tags above
+     ========================================================= */
+  const { useState, useEffect, useRef } = React;
+  const { createRoot } = ReactDOM;
+  gsap.registerPlugin(ScrollTrigger);
+
+  /* =========================================================
+     INLINE SVG ICONS — zero CDN dependency
+     ========================================================= */
+  const I = ({ w = 24, h = 24, sw = 2, className = "", children }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox={`0 0 ${w} ${h}`} fill="none"
+         stroke="currentColor" strokeWidth={sw} strokeLinecap="round" strokeLinejoin="round"
+         className={className}>
+      {children}
+    </svg>
+  );
+  const ArrowUpRight = (p) => <I {...p}><line x1="7" y1="17" x2="17" y2="7"/><polyline points="7 7 17 7 17 17"/></I>;
+  const ChevronRight = (p) => <I {...p}><polyline points="9 18 15 12 9 6"/></I>;
+  const Plus         = (p) => <I {...p}><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></I>;
+  const Minus        = (p) => <I {...p}><line x1="5" y1="12" x2="19" y2="12"/></I>;
+  const Download     = (p) => <I {...p}><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></I>;
+  const Mail         = (p) => <I {...p}><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></I>;
+  const Send         = (p) => <I {...p}><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></I>;
+  const Globe        = (p) => <I {...p}><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></I>;
+  const DownloadApp  = (p) => <I {...p}><path d="M12 2v13m0 0-4-4m4 4 4-4"/><rect x="2" y="19" width="20" height="1" rx="0.5"/></I>;
+
+
+  /* =========================================================
+     HOOKS
+     ========================================================= */
+  /* Scroll-triggered fade + rise, cleans up via gsap.context */
+  const useReveal = (opts = {}) => {
+    const ref = useRef(null);
+    useEffect(() => {
+      const el = ref.current;
+      if (!el) return;
+      const ctx = gsap.context(() => {
+        gsap.fromTo(el,
+          { opacity: 0, y: opts.y ?? 40 },
+          {
+            opacity: 1, y: 0,
+            duration: opts.duration ?? 1.2,
+            delay: opts.delay ?? 0,
+            ease: "power3.out",
+            scrollTrigger: { trigger: el, start: opts.start ?? "top 86%", once: true },
+          }
+        );
+      }, ref);
+      return () => ctx.revert();
+    }, []);
+    return ref;
+  };
+
+  /* =========================================================
+     PRIMITIVES
+     ========================================================= */
+  const Eyebrow = ({ children, className = "" }) => (
+    <span className={`font-mono text-[11px] uppercase tracking-[0.2em] text-brand-orange ${className}`}>
+      {children}
+    </span>
+  );
+
+  const Reveal = ({ children, delay = 0, y = 40, className = "" }) => {
+    const ref = useReveal({ delay, y });
+    return <div ref={ref} className={className}>{children}</div>;
+  };
+
+  /* Pure-CSS button — no GSAP needed */
+  const Btn = ({ children, variant = "primary", as: Tag = "button", className = "", ...rest }) => (
+    <Tag className={`btn btn-${variant} ${className}`} {...rest}>
+      <span>{children}</span>
+    </Tag>
+  );
+
+  const AccentLink = ({ children, href = "#", className = "" }) => (
+    <a href={href} className={`accent-link ${className}`}>
+      <span className="al-text">{children}</span>
+      <ArrowUpRight className="w-3.5 h-3.5 flex-shrink-0" sw={2} />
+    </a>
+  );
+
+  /* =========================================================
+     NAV — with Globe (language) + Download app icons
+     ========================================================= */
+  const Nav = () => {
+    const [scrolled, setScrolled] = useState(false);
+    useEffect(() => {
+      const fn = () => setScrolled(window.scrollY > 16);
+      fn();
+      window.addEventListener("scroll", fn, { passive: true });
+      return () => window.removeEventListener("scroll", fn);
+    }, []);
+
+    const links = ["Explore", "Trade", "Features", "Company", "$MBG", "Support"];
+
+    return (
+      <nav className={`fixed inset-x-0 top-0 z-50 h-14 transition-all duration-500 ${
+        scrolled ? "bg-black/82 backdrop-blur-2xl border-b border-white/[0.07]" : "bg-transparent"
+      }`}>
+        <div className="max-w-container mx-auto px-6 md:px-12 h-full grid grid-cols-[auto_1fr_auto] items-center gap-6">
+          {/* Logo */}
+          <a href="#" aria-label="mb.io home">
+            <img
+              src="brand/mb-logo.svg"
+              alt="mb.io"
+              className="h-7 w-auto"
+            />
+          </a>
+
+          {/* Centre links */}
+          <ul className="hidden md:flex gap-8 list-none m-0 p-0 justify-center">
+            {links.map(item => (
+              <li key={item}>
+                <a href="#" className="text-[13px] text-white/60 hover:text-white transition-colors duration-200 tracking-tight">
+                  {item}
+                </a>
+              </li>
+            ))}
+          </ul>
+
+          {/* Right cluster: Language · Download · Log in · Sign up */}
+          <div className="flex items-center gap-3.5 justify-end">
+            <button
+              aria-label="Language"
+              className="hidden sm:flex items-center justify-center w-8 h-8 text-white/45 hover:text-white transition-colors duration-200"
+            >
+              <Globe className="w-[17px] h-[17px]" sw={1.5} />
+            </button>
+            <button
+              aria-label="Download app"
+              className="hidden sm:flex items-center justify-center w-8 h-8 text-white/45 hover:text-white transition-colors duration-200"
+            >
+              <DownloadApp className="w-[17px] h-[17px]" sw={1.5} />
+            </button>
+            <div className="w-px h-5 bg-white/[0.1] hidden sm:block" />
+            <a href="#" className="text-[13px] text-white/60 hover:text-white transition-colors tracking-tight">
+              Log in
+            </a>
+            <a href="#" className="btn btn-primary" style={{ padding: "8px 18px", fontSize: "13px" }}>
+              <span>Sign up</span>
+            </a>
+          </div>
+        </div>
+      </nav>
+    );
+  };
+
+  /* =========================================================
+     HERO — full-width video background, compressed typography
+     ========================================================= */
+  const Hero = () => {
+    const heroRef = useRef(null);
+
+    useEffect(() => {
+      const ctx = gsap.context(() => {
+        /* Hero eyebrow fades in first */
+        gsap.from(".hero-eyebrow", {
+          opacity: 0, y: 18, duration: 1.0, ease: "power3.out", delay: 0.15,
+        });
+        /* Headline lines rise from clip mask */
+        gsap.from(".hero-line", {
+          yPercent: 108, duration: 1.5, stagger: 0.1, ease: "power4.out", delay: 0.35,
+        });
+        /* Sub-content fades in after headline settles */
+        gsap.from(".hero-sub", {
+          opacity: 0, y: 30, duration: 1.1, ease: "power3.out", delay: 1.15,
+        });
+        gsap.from(".hero-meta", {
+          opacity: 0, y: 20, duration: 1.0, ease: "power3.out", delay: 1.35,
+        });
+        /* Video parallax on scroll */
+        gsap.to(".hero-video", {
+          yPercent: 14, ease: "none",
+          scrollTrigger: {
+            trigger: heroRef.current,
+            start: "top top",
+            end: "bottom top",
+            scrub: true,
+          },
+        });
+        /* Slow zoom-out from 108% → 100% as page loads */
+        gsap.fromTo(".hero-video", { scale: 1.08 }, { scale: 1.0, duration: 3.2, ease: "power2.out" });
+      }, heroRef);
+      return () => ctx.revert();
+    }, []);
+
+    return (
+      <header ref={heroRef} className="relative h-screen min-h-[720px] flex items-end overflow-hidden">
+        {/* Full-screen video */}
+        <video
+          className="hero-video absolute inset-0 w-full h-full object-cover object-bottom"
+          src="assets/herovideo.mp4"
+          autoPlay muted loop playsInline
+        />
+
+        {/* Layered overlays for contrast + brand warmth */}
+        <div className="absolute inset-0 bg-black/35" />
+        <div className="absolute inset-0 bg-gradient-to-b from-black/55 via-transparent to-black" />
+        <div className="absolute inset-0 bg-[radial-gradient(ellipse_70%_55%_at_50%_0%,rgba(255,169,0,0.07),transparent_65%)]" />
+
+        <div className="relative z-10 max-w-container mx-auto px-6 md:px-12 pb-24 md:pb-32 w-full">
+          <Eyebrow className="hero-eyebrow inline-block mb-7">$MBG · Utility token</Eyebrow>
+
+          {/* Compressed display headline — capped so it can't bleed into the nav on wide screens */}
+          <h1 className="hero-compressed m-0 text-[clamp(56px,9.5vw,132px)]">
+            <span className="block overflow-hidden pb-[0.06em]">
+              <span className="hero-line block">A TOKEN</span>
+            </span>
+            <span className="block overflow-hidden pb-[0.06em]">
+              <span className="hero-line block">BUILT FOR THE</span>
+            </span>
+            <span className="block overflow-hidden pb-[0.06em]">
+              <span className="hero-line block text-brand-orange">REAL WORLD.</span>
+            </span>
+          </h1>
+
+          {/* Sub-row: body copy + CTAs side by side */}
+          <div className="hero-sub mt-10 flex flex-col sm:flex-row sm:items-end gap-8 md:gap-14">
+            <p className="text-[clamp(15px,1.25vw,18px)] leading-[1.55] text-white/65 max-w-sm m-0">
+              Lower fees. Staking rewards. Exclusive platform access.
+              $MBG is your gateway to the MultiBank ecosystem.
+            </p>
+            <div className="flex flex-wrap gap-3 flex-shrink-0">
+              <a href="#" className="btn btn-primary">
+                <span>Invest now <ArrowUpRight className="w-4 h-4 inline-block align-[-2px]" sw={2} /></span>
+              </a>
+              <a href="#" className="btn btn-ghost">
+                <span>Read whitepaper <ChevronRight className="w-4 h-4 inline-block align-[-2px]" sw={2} /></span>
+              </a>
+            </div>
+          </div>
+
+          {/* Live metadata */}
+          <div className="hero-meta mt-10 flex items-center gap-6 font-mono text-[10px] uppercase tracking-[0.2em] text-white/40">
+            <span className="flex items-center gap-2">
+              <span className="w-1.5 h-1.5 rounded-full bg-gain animate-pulse" />
+              Live · MBG/USDT 0.48
+            </span>
+            <span className="hidden sm:inline">·</span>
+            <span className="hidden sm:inline">Regulated by MultiBank Group</span>
+          </div>
+        </div>
+
+        {/* Scroll indicator */}
+        <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 z-10">
+          <span className="font-mono text-[10px] uppercase tracking-[0.22em] text-white/35">Scroll</span>
+          <div className="w-px h-8 bg-gradient-to-b from-white/30 to-transparent" />
+        </div>
+      </header>
+    );
+  };
+
+  /* =========================================================
+     EARN INTEREST
+     ========================================================= */
+  const Ticker = () => (
+    <div className="border-t border-white/[0.08]">
+      <div className="grid grid-cols-[1fr_auto_auto] gap-4 py-3.5 px-1 font-mono text-[10px] uppercase tracking-[0.18em] text-white/40 border-b border-white/[0.08]">
+        <span>Top gainers</span><span>Price</span><span className="text-right">24h</span>
+      </div>
+      {Array.from({ length: 5 }).map((_, i) => (
+        <div key={i} className="ticker-row grid grid-cols-[1fr_auto_auto] gap-4 items-center py-5 px-1 border-b border-white/[0.08] hover:bg-white/[0.02] transition-colors duration-300">
+          <span className="flex items-center gap-3.5 text-[15px] font-medium tracking-tight">
+            <span className="relative w-7 h-7 flex-shrink-0">
+              <img src="assets/Clip-path-group-1.svg" alt="" className="absolute inset-0 w-full h-full object-contain" />
+            </span>
+            MBG/USDT
+          </span>
+          <span className="font-mono text-[14px] text-white/65 tabular-nums">0.48</span>
+          <span className="font-mono text-[14px] text-gain text-right tabular-nums">+34.14%</span>
+        </div>
+      ))}
+    </div>
+  );
+
+  const EarnSection = () => {
+    const ref = useRef(null);
+    useEffect(() => {
+      const ctx = gsap.context(() => {
+        gsap.from(".ticker-row", {
+          opacity: 0, x: -28, stagger: 0.09, duration: 0.85, ease: "power3.out",
+          scrollTrigger: { trigger: ref.current, start: "top 76%", once: true },
+        });
+      }, ref);
+      return () => ctx.revert();
+    }, []);
+    return (
+      <section ref={ref} className="py-32 md:py-40">
+        <div className="max-w-container mx-auto px-6 md:px-12 grid md:grid-cols-[1.05fr_0.95fr] gap-16 md:gap-24 items-center">
+          <Ticker />
+          <Reveal>
+            <Eyebrow>Passive income</Eyebrow>
+            <h2 className="mt-5 font-medium text-[clamp(40px,5.4vw,68px)] leading-[1.02] tracking-[-0.028em] m-0">
+              Earn interest, <span className="text-brand-orange">effortlessly.</span>
+            </h2>
+            <p className="mt-6 text-white/65 text-[18px] leading-[1.55] max-w-md">
+              By holding $MBG, you earn passive rewards through staking and loyalty programmes — without needing to actively trade.
+            </p>
+          </Reveal>
+        </div>
+      </section>
+    );
+  };
+
+  /* =========================================================
+     SUPERCHARGE
+     ========================================================= */
+  const Step = ({ num, title, body, icon, last }) => (
+    <div className={`group flex flex-col gap-5 pt-14 ${last ? "pr-0" : "md:border-r border-white/[0.08] pr-6 md:pr-10"} ${num === "01" ? "" : "md:pl-10 pl-0"}`}>
+      <div className="flex items-center justify-between">
+        <span className="font-mono text-[11px] uppercase tracking-[0.18em] text-brand-orange">{`0${num} — ${["Acquire","Unlock value","Earn rewards"][+num-1]}`}</span>
+        <img src={icon} alt="" className="w-11 h-11 object-contain opacity-95 transition-transform duration-700 ease-out group-hover:scale-110 group-hover:-rotate-3" />
+      </div>
+      <h3 className="font-medium text-[24px] md:text-[26px] leading-[1.12] tracking-[-0.02em] m-0">{title}</h3>
+      <p className="text-white/55 text-[15px] leading-[1.55] max-w-[34ch] m-0">{body}</p>
+    </div>
+  );
+
+  const SuperchargeSection = () => (
+    <section className="py-32 md:py-40">
+      <div className="max-w-container mx-auto px-6 md:px-12">
+        <Reveal>
+          <div className="flex flex-col items-center text-center gap-6 mb-24">
+            <Eyebrow>How it works</Eyebrow>
+            <h2 className="font-medium text-[clamp(40px,5.4vw,68px)] leading-[1.02] tracking-[-0.028em] m-0">
+              Supercharge your <span className="text-brand-orange">$MBG.</span>
+            </h2>
+            <p className="text-white/65 text-[18px] leading-[1.55] max-w-2xl m-0">
+              Once purchased, $MBG can be used across the MultiBank ecosystem to access investments, unlock platform benefits, and earn ongoing rewards.
+            </p>
+          </div>
+        </Reveal>
+        <Reveal y={48}>
+          <div className="grid md:grid-cols-3 border-t border-white/[0.08]">
+            <Step num="1" icon="assets/Vector-1.svg" title="Acquire $MBG through supported exchanges and MultiBank platforms." body="Unlock access to the ecosystem and its full range of benefits in a single transaction." />
+            <Step num="2" icon="assets/Vector.svg"   title="Use $MBG across MultiBank platforms to unlock real value." body="Tokenised investments, exclusive features, reduced fees, and passive staking rewards." />
+            <Step num="3" icon="assets/Vector-2.svg" title="Receive ongoing rewards and benefit from structured supply reduction." body="A buyback and burn programme designed to support long-term value over time." last />
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+
+  /* =========================================================
+     LONG RUN — Stroke-draw buyback chart
+     ========================================================= */
+  const BuybackChart = () => {
+    const ref = useRef(null);
+    const pathRef = useRef(null);
+    const wrapRef = useRef(null);
+    const [hover, setHover] = useState(null);
+
+    /* Synthetic quarterly S-curve, cumulative total $440M over 4 years.
+       burn = $MBG burned that quarter (in millions of MBG).
+       pct  = cumulative % of total supply removed. */
+    const data = [
+      { q: "Q1", y: 1, cum:   8, burn: 16, pct: 0.2 },
+      { q: "Q2", y: 1, cum:  18, burn: 20, pct: 0.4 },
+      { q: "Q3", y: 1, cum:  32, burn: 28, pct: 0.7 },
+      { q: "Q4", y: 1, cum:  50, burn: 36, pct: 1.1 },
+      { q: "Q1", y: 2, cum:  72, burn: 44, pct: 1.5 },
+      { q: "Q2", y: 2, cum:  96, burn: 48, pct: 2.0 },
+      { q: "Q3", y: 2, cum: 122, burn: 52, pct: 2.5 },
+      { q: "Q4", y: 2, cum: 150, burn: 56, pct: 3.1 },
+      { q: "Q1", y: 3, cum: 182, burn: 62, pct: 3.8 },
+      { q: "Q2", y: 3, cum: 218, burn: 68, pct: 4.5 },
+      { q: "Q3", y: 3, cum: 256, burn: 72, pct: 5.3 },
+      { q: "Q4", y: 3, cum: 295, burn: 74, pct: 6.1 },
+      { q: "Q1", y: 4, cum: 335, burn: 76, pct: 6.9 },
+      { q: "Q2", y: 4, cum: 370, burn: 66, pct: 7.6 },
+      { q: "Q3", y: 4, cum: 405, burn: 66, pct: 8.3 },
+      { q: "Q4", y: 4, cum: 440, burn: 66, pct: 9.0 },
+    ];
+
+    const W = 600, H = 380;
+    const padL = 12, padR = 44, padT = 24, padB = 60;
+    const innerW = W - padL - padR;
+    const innerH = H - padT - padB;
+    const maxCum = 440;
+
+    const xOf = (i) => padL + (innerW * i) / (data.length - 1);
+    const yOf = (cum) => padT + innerH * (1 - cum / maxCum);
+
+    const linePath = data.map((d, i) => `${i === 0 ? "M" : "L"}${xOf(i)},${yOf(d.cum)}`).join(" ");
+    const areaPath = `${linePath} L${xOf(data.length - 1)},${padT + innerH} L${xOf(0)},${padT + innerH} Z`;
+
+    useEffect(() => {
+      const ctx = gsap.context(() => {
+        const path = pathRef.current;
+        if (!path) return;
+        const len = path.getTotalLength();
+        gsap.set(path, { strokeDasharray: len, strokeDashoffset: len });
+        gsap.to(path, {
+          strokeDashoffset: 0, duration: 2.4, ease: "power2.inOut",
+          scrollTrigger: { trigger: ref.current, start: "top 70%", once: true },
+        });
+        gsap.from(".chart-year-dot", {
+          scale: 0, opacity: 0, transformOrigin: "center",
+          stagger: 0.35, duration: 0.5, ease: "back.out(2)", delay: 0.6,
+          scrollTrigger: { trigger: ref.current, start: "top 70%", once: true },
+        });
+      }, ref);
+      return () => ctx.revert();
+    }, []);
+
+    const onMove = (e) => {
+      const wrap = wrapRef.current;
+      if (!wrap) return;
+      const rect = wrap.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      /* Map pointer to viewBox x, taking left pad into account */
+      const vbX = ((clientX - rect.left) / rect.width) * W;
+      const t = Math.max(0, Math.min(1, (vbX - padL) / innerW));
+      const idx = Math.round(t * (data.length - 1));
+      setHover(idx);
+    };
+    const onLeave = () => setHover(null);
+
+    const active = hover != null ? data[hover] : null;
+    const activeLeftPct = hover != null ? (xOf(hover) / W) * 100 : 0;
+    const activeTopPct  = active ? (yOf(active.cum) / H) * 100 : 0;
+    const tooltipOnLeft = hover != null && hover > data.length / 2;
+
+    return (
+      <div ref={ref} className="relative w-full">
+        <div className="flex items-start justify-between mb-4">
+          <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/40">Cumulative buyback · USD</span>
+          <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-white/40 inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-brand-orange" /> $MBG burned
+          </span>
+        </div>
+        <div
+          ref={wrapRef}
+          className="relative aspect-[16/10] w-full cursor-crosshair select-none touch-none"
+          onMouseMove={onMove}
+          onMouseLeave={onLeave}
+          onTouchStart={onMove}
+          onTouchMove={onMove}
+          onTouchEnd={onLeave}
+        >
+          <svg viewBox={`0 0 ${W} ${H}`} preserveAspectRatio="none" className="w-full h-full overflow-visible">
+            <defs>
+              <linearGradient id="areaFill" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="0%" stopColor="#FFA900" stopOpacity="0.34" />
+                <stop offset="100%" stopColor="#FFA900" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+
+            {/* horizontal gridlines */}
+            <g stroke="rgba(255,255,255,0.06)" strokeWidth="1">
+              {[0, 0.25, 0.5, 0.75, 1].map((t, i) => (
+                <line key={i} x1={padL} y1={padT + innerH * t} x2={W - padR} y2={padT + innerH * t} />
+              ))}
+            </g>
+
+            {/* y-axis labels */}
+            <g fill="rgba(255,255,255,0.35)" fontFamily="GT America Mono,monospace" fontSize="10" letterSpacing="0.5">
+              {[
+                { v: 440, t: 0 },
+                { v: 330, t: 0.25 },
+                { v: 220, t: 0.5 },
+                { v: 110, t: 0.75 },
+                { v: 0,   t: 1 },
+              ].map((row, i) => (
+                <text key={i} x={W - padR + 6} y={padT + innerH * row.t + 3} textAnchor="start">${row.v}M</text>
+              ))}
+            </g>
+
+            {/* area + line */}
+            <path d={areaPath} fill="url(#areaFill)" />
+            <path ref={pathRef} d={linePath} fill="none" stroke="#FFA900" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+
+            {/* year-end dots */}
+            <g fill="#FFA900">
+              {[3, 7, 11, 15].map(i => (
+                <circle key={i} className="chart-year-dot" cx={xOf(i)} cy={yOf(data[i].cum)} r="3.5" />
+              ))}
+            </g>
+
+            {/* year labels */}
+            <g fill="rgba(255,255,255,0.32)" fontFamily="GT America Mono,monospace" fontSize="11" letterSpacing="1">
+              <text x={xOf(3)}  y={H - 28} textAnchor="middle">YEAR 1</text>
+              <text x={xOf(7)}  y={H - 28} textAnchor="middle">YEAR 2</text>
+              <text x={xOf(11)} y={H - 28} textAnchor="middle">YEAR 3</text>
+              <text x={xOf(15)} y={H - 28} textAnchor="middle">YEAR 4</text>
+            </g>
+
+            {/* hover guideline + active dot */}
+            {active && (
+              <g pointerEvents="none">
+                <line
+                  x1={xOf(hover)} y1={padT}
+                  x2={xOf(hover)} y2={padT + innerH}
+                  stroke="rgba(255,169,0,0.5)" strokeWidth="1" strokeDasharray="3 4"
+                />
+                <circle cx={xOf(hover)} cy={yOf(active.cum)} r="11" fill="#FFA900" fillOpacity="0.16" />
+                <circle cx={xOf(hover)} cy={yOf(active.cum)} r="5"  fill="#FFA900" />
+                <circle cx={xOf(hover)} cy={yOf(active.cum)} r="5"  fill="none" stroke="#0B0B10" strokeWidth="1.5" />
+              </g>
+            )}
+          </svg>
+
+          {/* tooltip — positioned as % of the wrapper so it tracks the svg */}
+          {active && (
+            <div
+              className="absolute pointer-events-none z-20"
+              style={{
+                left: `${activeLeftPct}%`,
+                top: `${activeTopPct}%`,
+              }}
+            >
+              <div
+                className="bg-black/88 backdrop-blur-xl border border-white/[0.09] rounded-lg px-4 py-3 min-w-[200px] shadow-[0_20px_60px_-20px_rgba(0,0,0,0.8)]"
+                style={{
+                  transform: `translate(${tooltipOnLeft ? "calc(-100% - 14px)" : "14px"}, -50%)`,
+                }}
+              >
+                <div className="font-mono text-[9px] uppercase tracking-[0.18em] text-white/45 mb-2.5">
+                  {active.q} · Year {active.y}
+                </div>
+                <div className="flex justify-between items-baseline gap-6 mb-1.5">
+                  <span className="text-[11px] text-white/55">Cumulative buyback</span>
+                  <span className="font-mono text-[13px] text-white tabular-nums">${active.cum}M</span>
+                </div>
+                <div className="flex justify-between items-baseline gap-6 mb-1.5">
+                  <span className="text-[11px] text-white/55">$MBG burned</span>
+                  <span className="font-mono text-[13px] text-brand-orange tabular-nums">{active.burn}M</span>
+                </div>
+                <div className="flex justify-between items-baseline gap-6">
+                  <span className="text-[11px] text-white/55">Supply removed</span>
+                  <span className="font-mono text-[13px] text-white tabular-nums">{active.pct}%</span>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const LongRunSection = () => (
+    <section className="relative py-32 md:py-40 bg-[#0B0B10]">
+      {/* soft top + bottom fades so the carbon panel breathes into the black above/below */}
+      <div className="pointer-events-none absolute inset-x-0 top-0 h-24 bg-gradient-to-b from-black to-transparent" />
+      <div className="pointer-events-none absolute inset-x-0 bottom-0 h-24 bg-gradient-to-t from-black to-transparent" />
+      {/* subtle warm inner glow to anchor the section */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_60%_50%_at_70%_40%,rgba(255,169,0,0.045),transparent_70%)]" />
+      <div className="relative max-w-container mx-auto px-6 md:px-12">
+        <div className="grid md:grid-cols-[1fr_1.15fr] gap-16 md:gap-24 items-center">
+          <Reveal>
+            <div className="flex items-center gap-4 mb-7">
+              <img src="assets/Vector-3.svg" alt="" className="w-10 h-10 object-contain" />
+              <Eyebrow>For the long run</Eyebrow>
+            </div>
+            <h2 className="font-medium text-[clamp(40px,5.4vw,68px)] leading-[1.02] tracking-[-0.028em] m-0">
+              Reducing supply.<br />
+              <span className="text-brand-orange">Reinforcing value.</span>
+            </h2>
+            <p className="mt-7 text-white/65 text-[18px] leading-[1.55] max-w-md">
+              MultiBank has committed to a structured buyback and burn programme designed to reduce the total supply of $MBG over time.
+            </p>
+          </Reveal>
+          <Reveal delay={0.15}><BuybackChart /></Reveal>
+        </div>
+        <Reveal y={28}>
+          <div className="grid md:grid-cols-3 mt-28 border-t border-white/[0.08]">
+            {[
+              { label: "Benefit 01", title: "Compound interest with MBG+" },
+              { label: "Benefit 02", title: "Earn rewards for participation" },
+              { label: "Benefit 03", title: "Benefit from ecosystem growth" },
+            ].map((b, i) => (
+              <div key={i} className={`flex flex-col gap-2.5 py-8 pr-8 ${i !== 2 ? "border-r border-white/[0.08]" : ""} ${i !== 0 ? "md:pl-8" : ""}`}>
+                <span className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/40">{b.label}</span>
+                <h4 className="font-medium text-[20px] tracking-[-0.015em] m-0">{b.title}</h4>
+              </div>
+            ))}
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+
+  /* =========================================================
+     ECOSYSTEM — uses diagram.svg exactly as provided
+     ========================================================= */
+  const EcosystemSection = () => (
+    <section className="py-32 md:py-40">
+      <div className="max-w-container mx-auto px-6 md:px-12">
+        <Reveal>
+          <div className="flex flex-col items-center text-center gap-6 mb-20">
+            <Eyebrow>Ecosystem</Eyebrow>
+            <h2 className="font-medium text-[clamp(40px,5.4vw,68px)] leading-[1.02] tracking-[-0.028em] max-w-3xl m-0">
+              $MBG and the<br />
+              <span className="text-brand-orange">MultiBank ecosystem.</span>
+            </h2>
+            <p className="text-white/65 text-[18px] leading-[1.55] max-w-2xl m-0">
+              $MBG connects and powers MultiBank Group's regulated ecosystem spanning trading, exchange, and real-world asset platforms — providing utility, rewards, and access.
+            </p>
+          </div>
+        </Reveal>
+
+        <Reveal y={32}>
+          <img
+            src="assets/diagram.svg"
+            alt="$MBG and the MultiBank ecosystem"
+            className="diagram-img"
+          />
+        </Reveal>
+
+        <Reveal y={28}>
+          <div className="grid md:grid-cols-3 mt-32 md:mt-40 border-y border-white/[0.08]">
+            {[
+              { value: "$29",  unit: "B",  label: "Daily trading volume across MultiBank Group platforms" },
+              { value: "2",    unit: "M+", label: "Clients across 100+ countries worldwide" },
+              { value: "$440", unit: "M",  label: "Projected token buyback & burn over first four years" },
+            ].map((s, i) => (
+              <div key={i} className={`flex flex-col gap-4 py-16 px-6 md:px-10 ${i !== 2 ? "border-r border-white/[0.08]" : ""}`}>
+                <div className="font-light text-[clamp(56px,7vw,96px)] leading-[0.96] tracking-[-0.035em]">
+                  {s.value}
+                  <span className="text-[0.4em] text-white/45 align-baseline ml-1 font-normal">{s.unit}</span>
+                </div>
+                <div className="font-mono text-[11px] uppercase tracking-[0.18em] text-white/40 max-w-[24ch]">{s.label}</div>
+              </div>
+            ))}
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+
+  /* =========================================================
+     KHABIB MOMENT
+     ========================================================= */
+  const KhabibSection = () => {
+    const ref = useRef(null);
+    useEffect(() => {
+      const ctx = gsap.context(() => {
+        gsap.from(".khabib-line", {
+          yPercent: 112, stagger: 0.13, duration: 1.3, ease: "power4.out",
+          scrollTrigger: { trigger: ref.current, start: "top 70%", once: true },
+        });
+        gsap.from(".khabib-img", {
+          opacity: 0, scale: 1.06, duration: 1.8, ease: "power3.out",
+          scrollTrigger: { trigger: ref.current, start: "top 75%", once: true },
+        });
+      }, ref);
+      return () => ctx.revert();
+    }, []);
+    return (
+      <section ref={ref} className="py-32 md:py-48 relative">
+        <div className="max-w-container mx-auto px-6 md:px-12">
+          <div className="text-center flex flex-col items-center gap-7 mb-16">
+            <Eyebrow>Global venture</Eyebrow>
+            <h2 className="font-medium text-[clamp(56px,10vw,144px)] leading-[0.92] tracking-[-0.045em] m-0">
+              <span className="block overflow-hidden"><span className="khabib-line block">Unblemished.</span></span>
+              <span className="block overflow-hidden"><span className="khabib-line block">Unstoppable.</span></span>
+              <span className="block overflow-hidden"><span className="khabib-line block text-brand-orange">United.</span></span>
+            </h2>
+          </div>
+          <div className="khabib-img">
+            <img
+              src="assets/khabib.svg"
+              alt="Global venture with Khabib Nurmagomedov"
+              className="w-full max-w-5xl mx-auto"
+            />
+          </div>
+          <p className="text-center text-white/65 text-[18px] max-w-2xl mx-auto mt-16 leading-[1.55]">
+            Unbeaten in the ring. Unmatched in integrity. The discipline that defined Khabib now fuels the real-world-asset-backed $MBG token.
+          </p>
+          <div className="text-center mt-10">
+            <AccentLink>Find out more</AccentLink>
+          </div>
+        </div>
+      </section>
+    );
+  };
+
+  /* =========================================================
+     LISTED ON — real exchange SVG logos
+     ========================================================= */
+  const exchanges = [
+    { name: "Gate",    logo: "assets/gate.svg" },
+    { name: "Uniswap", logo: "assets/uniswap.svg" },
+    { name: "MEXC",    logo: "assets/mexc.svg" },
+    { name: "BingX",   logo: "assets/bingx.svg" },
+  ];
+
+  const ListedSection = () => (
+    <section className="listed-light relative py-28 md:py-36 bg-[#EFE7D6]">
+      {/* subtle warm glow on top of the cream so it doesn't feel flat */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_50%,rgba(255,169,0,0.06),transparent_70%)]" />
+      <div className="relative max-w-container mx-auto px-6 md:px-12">
+        <Reveal>
+          <div className="flex flex-wrap items-baseline justify-between gap-4 mb-16">
+            <h2 className="font-medium text-[clamp(32px,4vw,52px)] leading-[1.0] tracking-[-0.025em] m-0" style={{ color: "#0A0A0D" }}>
+              $MBG is listed <span style={{ color: "#0A0A0D" }}>on<span className="text-brand-orange">.</span></span>
+            </h2>
+            <span className="font-mono text-[11px] uppercase tracking-[0.2em]" style={{ color: "rgba(10,10,13,0.55)" }}>
+              Buy anywhere
+            </span>
+          </div>
+        </Reveal>
+        <div className="grid grid-cols-2 md:grid-cols-4 border-t border-black/[0.1]">
+          {exchanges.map((e, i) => (
+            <Reveal key={e.name} delay={i * 0.08} y={20}>
+              <a
+                href="#"
+                className="group flex flex-col items-start justify-between gap-8 px-6 md:px-8 py-10 border-l border-black/[0.1] first:border-l-0 hover:bg-black/[0.04] transition-colors h-full"
+                style={{ color: "#0A0A0D" }}
+              >
+                <div className="flex items-center gap-4">
+                  <img
+                    src={e.logo}
+                    alt={e.name}
+                    className="w-9 h-9 object-contain transition-transform duration-500 group-hover:scale-110 group-hover:-rotate-3"
+                    style={{ filter: "brightness(0)" }}
+                  />
+                  <span className="font-medium text-[18px] tracking-tight" style={{ color: "#0A0A0D" }}>
+                    {e.name}
+                  </span>
+                </div>
+                {/* Dark-themed accent link (overrides the global orange .accent-link) */}
+                <span
+                  className="inline-flex items-center gap-1.5 font-medium text-[14px] tracking-tight transition-[gap] duration-300 group-hover:gap-[10px]"
+                  style={{ color: "#0A0A0D" }}
+                >
+                  <span className="relative">
+                    Buy now
+                    <span
+                      className="absolute left-0 -bottom-px h-px bg-current transition-[width] duration-[400ms]"
+                      style={{ width: 0 }}
+                    />
+                  </span>
+                  <ArrowUpRight className="w-3.5 h-3.5 flex-shrink-0" sw={2} />
+                </span>
+              </a>
+            </Reveal>
+          ))}
+        </div>
+      </div>
+    </section>
+  );
+
+  /* =========================================================
+     FAQ — GSAP height accordion
+     ========================================================= */
+  const faqs = [
+    { q: "What is $MBG and how does it work?",  a: "Reflects your loaned funds in MBG+ plus any available balance you can still lend. The MBG+ programme automatically compounds interest earned from staking and platform fees, rolling rewards back into your position without requiring any manual action." },
+    { q: "Account security",                     a: "All accounts are protected by enterprise-grade encryption, mandatory two-factor authentication, and cold-storage asset custody held across multiple regulated jurisdictions." },
+    { q: "How does trading work?",               a: "Trade $MBG and supported pairs directly through mb.io or across our listed partner exchanges. Spot and staking are available today; derivatives are coming in the next release." },
+    { q: "Deposits & withdrawals",               a: "Deposits are credited after on-chain confirmations. Withdrawal limits and processing times depend on your verification tier — most withdrawals clear within an hour for verified users." },
+    { q: "$MBG+ VIP programme",                  a: "VIP tiers unlock higher reward multipliers, fee rebates, and early access to new tokenised real-world assets as they launch on the platform." },
+    { q: "Regulations and compliance",           a: "MultiBank Group is licensed and regulated across multiple jurisdictions. $MBG utility and custody operations comply with applicable regulatory frameworks in each market." },
+  ];
+
+  const FaqItem = ({ q, a, isOpen, onClick }) => {
+    const contentRef = useRef(null);
+    useEffect(() => {
+      const el = contentRef.current;
+      if (!el) return;
+      gsap.to(el, { height: isOpen ? el.scrollHeight : 0, duration: 0.5, ease: "power3.inOut" });
+    }, [isOpen]);
+    return (
+      <li className="border-b border-white/[0.08] list-none">
+        <button onClick={onClick} className="w-full flex items-center justify-between py-8 text-left group">
+          <span className="font-medium text-[20px] md:text-[22px] leading-tight tracking-[-0.015em] group-hover:text-brand-orange transition-colors duration-300">{q}</span>
+          <span className="ml-6 flex-shrink-0 text-white/70 group-hover:text-brand-orange transition-colors">
+            {isOpen ? <Minus className="w-5 h-5" sw={1.5} /> : <Plus className="w-5 h-5" sw={1.5} />}
+          </span>
+        </button>
+        <div ref={contentRef} className="overflow-hidden h-0">
+          <div className="pb-8 pr-12 text-white/65 text-[16px] leading-[1.6] max-w-3xl">{a}</div>
+        </div>
+      </li>
+    );
+  };
+
+  const FaqSection = () => {
+    const [open, setOpen] = useState(0);
+    return (
+      <section className="py-32 md:py-40">
+        <div className="max-w-container mx-auto px-6 md:px-12">
+          <Reveal>
+            <div className="flex flex-wrap justify-between items-end gap-6 mb-14">
+              <h2 className="font-medium text-[clamp(48px,6vw,84px)] leading-[0.98] tracking-[-0.03em] max-w-[14ch] m-0">
+                Frequently <span className="text-brand-orange">asked.</span>
+              </h2>
+              <AccentLink>View all</AccentLink>
+            </div>
+          </Reveal>
+          <Reveal y={20}>
+            <ul className="border-t border-white/[0.08] list-none p-0 m-0">
+              {faqs.map((f, i) => (
+                <FaqItem key={i} q={f.q} a={f.a} isOpen={open === i} onClick={() => setOpen(open === i ? -1 : i)} />
+              ))}
+            </ul>
+          </Reveal>
+        </div>
+      </section>
+    );
+  };
+
+  /* =========================================================
+     WHITEPAPER
+     ========================================================= */
+  const WhitepaperSection = () => (
+    <section className="py-32 md:py-40 border-t border-white/[0.08]">
+      <div className="max-w-container mx-auto px-6 md:px-12 grid md:grid-cols-2 gap-16 md:gap-24 items-center">
+        <Reveal>
+          <img src="assets/whitepaper.svg" alt="$MBG whitepaper" className="w-full max-w-xl mx-auto" />
+        </Reveal>
+        <Reveal delay={0.1}>
+          <Eyebrow>Whitepaper</Eyebrow>
+          <h3 className="mt-5 font-medium text-[clamp(40px,5vw,64px)] leading-[1.0] tracking-[-0.028em] m-0">
+            Read the <span className="text-brand-orange">$MBG</span><br />whitepaper.
+          </h3>
+          <p className="mt-7 text-white/65 text-[17px] leading-[1.55] max-w-md">
+            Comprehensive details on the $MBG token's utility, rewards, ecosystem integration, and tokenomics — straight from the MultiBank Group team.
+          </p>
+          <div className="mt-9">
+            <a href="#" className="btn btn-primary">
+              <span>Download PDF <Download className="w-4 h-4 inline-block align-[-2px]" sw={2} /></span>
+            </a>
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+
+  /* =========================================================
+     STAY UPDATED — QR codes, email signup
+     ========================================================= */
+  const StayUpdatedSection = () => (
+    <section className="py-32 md:py-40 border-t border-white/[0.08]">
+      <div className="max-w-container mx-auto px-6 md:px-12 grid md:grid-cols-[1.1fr_0.9fr] gap-16 md:gap-24 items-center">
+        <Reveal>
+          <Eyebrow>Newsletter</Eyebrow>
+          <h3 className="mt-5 font-medium text-[clamp(40px,5vw,64px)] leading-[1.0] tracking-[-0.028em] m-0">
+            Stay <span className="text-brand-orange">updated.</span>
+          </h3>
+          <p className="mt-7 text-white/65 text-[17px] leading-[1.55] max-w-md">
+            Be the first to know about $MBG updates, exchange listings, and community events. Join our Telegram and follow our X account.
+          </p>
+          <form
+            className="mt-9 max-w-md flex items-center border-b border-white/15 focus-within:border-brand-orange py-3 transition-colors duration-300"
+            onSubmit={(e) => e.preventDefault()}
+          >
+            <Mail className="w-4 h-4 text-white/40 mr-3 flex-shrink-0" sw={2} />
+            <input
+              type="email"
+              placeholder="your@email.com"
+              className="flex-1 bg-transparent border-0 outline-none text-white text-[16px] placeholder:text-white/30"
+            />
+            <button
+              type="submit"
+              className="text-brand-orange font-medium text-[14px] inline-flex items-center gap-2 hover:gap-3.5 transition-all duration-300"
+            >
+              Subscribe <ArrowUpRight className="w-4 h-4" sw={2} />
+            </button>
+          </form>
+        </Reveal>
+        <Reveal delay={0.15}>
+          <div className="flex gap-8 justify-center md:justify-end">
+            {[
+              { src: "assets/qr1.svg", label: "Follow on X" },
+              { src: "assets/qr2.svg", label: "Telegram" },
+            ].map((q) => (
+              <div key={q.label} className="flex flex-col items-center gap-3 group">
+                <div className="w-32 h-32 bg-white p-2 rounded-md transition-transform duration-500 group-hover:-rotate-2 group-hover:scale-105">
+                  <img src={q.src} alt={q.label} className="w-full h-full object-contain" />
+                </div>
+                <div className="flex items-center gap-1.5 font-mono text-[10px] uppercase tracking-[0.16em] text-white/55">
+                  <Send className="w-3 h-3" sw={2} /> {q.label}
+                </div>
+              </div>
+            ))}
+          </div>
+        </Reveal>
+      </div>
+    </section>
+  );
+
+  /* =========================================================
+     AS SEEN IN THE MEDIA — full-width SVG placeholder
+     ========================================================= */
+  const AsSeenSection = () => (
+    <section className="py-32 md:py-40 border-t border-white/[0.08]">
+      <div className="max-w-container mx-auto px-6 md:px-12">
+        <Reveal>
+          <div className="flex flex-col items-center text-center gap-4 mb-16">
+            <Eyebrow>Press &amp; Community</Eyebrow>
+          </div>
+        </Reveal>
+        <Reveal y={28}>
+          <img
+            src="assets/as-seen.svg"
+            alt="As seen in the media and $MBG mentions on X"
+            className="w-full"
+            style={{ borderRadius: "12px" }}
+          />
+        </Reveal>
+      </div>
+    </section>
+  );
+
+  /* =========================================================
+     FOOTER — hacken assurance + logos-footer.svg
+     ========================================================= */
+  const Footer = () => (
+    <footer className="border-t border-white/[0.08] pt-20 pb-12">
+      <div className="max-w-container mx-auto px-6 md:px-12">
+
+        {/* Top row: logo left, Assured by Hacken right */}
+        <div className="flex flex-wrap items-start justify-between gap-10 mb-16">
+          <div className="flex flex-col items-start gap-5">
+            <img src="brand/mb-logo.svg" alt="mb.io" className="h-8 w-auto" />
+            <p className="font-mono text-[10px] uppercase tracking-[0.08em] text-white/40 max-w-[28ch] leading-[1.6]">
+              Securely powered by MultiBank Group — a globally regulated financial services provider operating across 100+ countries.
+            </p>
+          </div>
+          <div className="flex flex-col gap-3">
+            <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/40">Assured by</span>
+            <img src="assets/hacken.svg" alt="Hacken" className="h-7 w-auto" />
+          </div>
+        </div>
+
+        {/* Nav link columns */}
+        <div className="grid grid-cols-2 md:grid-cols-3 gap-10 mb-16 border-t border-white/[0.08] pt-14">
+          {[
+            { h: "Legal",   items: ["Terms & conditions", "Privacy policy", "Client agreement", "Acceptable use"] },
+            { h: "Support", items: ["FAQ", "Contact us", "Status"] },
+            { h: "Company", items: ["About", "Newsroom", "Careers"] },
+          ].map((col) => (
+            <div key={col.h}>
+              <h4 className="font-mono text-[10px] uppercase tracking-[0.18em] text-white/40 mb-5 font-normal m-0">{col.h}</h4>
+              <ul className="flex flex-col gap-3 list-none p-0 m-0">
+                {col.items.map((it) => (
+                  <li key={it}>
+                    <a href="#" className="text-[14px] text-white/65 hover:text-brand-orange transition-colors">{it}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+
+        {/* Legal disclaimer */}
+        <div className="border-t border-white/[0.08] pt-10 pb-10">
+          <p className="font-mono text-[10px] leading-[1.75] text-white/30 max-w-3xl">
+            MEX Digital Pty Ltd (ABN 54 645 164 209), is a Corporate Authorised Representative (AFS Representative Number
+            001285048) of MEX Australia Pty Ltd (AFSL 414279) at SE 6103, FL 61, 19 Martin Pl., SYDNEY, NSW 2000 is registered as
+            a Digital Currency Exchange with AUSTRAC (Registration No. 100724469) through which we offer our Spot products.
+          </p>
+        </div>
+
+        {/* Bottom bar: We accept + copyright */}
+        <div className="border-t border-white/[0.08] pt-8 flex flex-wrap items-center justify-between gap-6">
+          <div className="flex items-center gap-5">
+            <span className="font-mono text-[10px] uppercase tracking-[0.16em] text-white/40 flex-shrink-0">We accept</span>
+            <img
+              src="assets/logos-footer.svg"
+              alt="Mastercard, Visa, Amex, PIX, UnionPay, SEPA, SWIFT, SPE"
+              className="h-5 w-auto"
+            />
+          </div>
+          <span className="font-mono text-[10px] tracking-[0.08em] text-white/40">
+            2026 Copyright. All Rights Reserved. mb.io
+          </span>
+        </div>
+
+      </div>
+    </footer>
+  );
+
+  /* =========================================================
+     APP ROOT
+     ========================================================= */
+  const App = () => {
+    /* Parallax the dot texture relative to page scroll — the dot layer
+       drifts downward at ~22% of scroll distance, giving a subtle
+       parallax feel without ever leaving the viewport. */
+    useEffect(() => {
+      const tween = gsap.to(".texture-dots", {
+        backgroundPositionY: "+=220",
+        ease: "none",
+        scrollTrigger: {
+          start: 0,
+          end: "max",
+          scrub: true,
+        },
+      });
+      return () => {
+        if (tween.scrollTrigger) tween.scrollTrigger.kill();
+        tween.kill();
+      };
+    }, []);
+
+    return (
+      <>
+        <div className="texture-dots" />
+        <Nav />
+        <Hero />
+        <EarnSection />
+        <SuperchargeSection />
+        <LongRunSection />
+        <EcosystemSection />
+        <KhabibSection />
+        <ListedSection />
+        <FaqSection />
+        <WhitepaperSection />
+        <StayUpdatedSection />
+        <AsSeenSection />
+        <Footer />
+      </>
+    );
+  };
+
+  createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
